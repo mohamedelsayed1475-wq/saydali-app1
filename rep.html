@@ -359,6 +359,7 @@
   let responses = {}; // {itemId: {available, price, discount, notes}}
   let responseCode = '';
   let pharmacyPhone = '';
+  let currency = '';
 
   // ═══════════════════════════════════════════════
   // Init
@@ -408,6 +409,7 @@
       document.getElementById('itemCount').textContent = sessionItems.length;
       document.getElementById('expiresAt').textContent = formatDate(sessionData.expires_at);
       pharmacyPhone = sessionData.rep_phone || '';
+      currency = sessionData.currency || '';
 
       renderItems();
       hide('loadingState');
@@ -455,7 +457,7 @@
         <div id="price-fields-${item.id}" style="display:none">
           <div class="price-row">
             <div class="field-group">
-              <label>السعر (جنيه)</label>
+              <label>السعر (${currency})</label>
               <input type="number" placeholder="0.00" id="price-${item.id}"
                 oninput="responses['${item.id}'].price = this.value" />
             </div>
