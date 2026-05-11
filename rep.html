@@ -53,7 +53,6 @@
 
     .container { max-width: 600px; margin: 0 auto; padding: 16px; }
 
-    /* Loading & Error */
     .loading, .error-state {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -69,7 +68,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Session Info */
     .session-info {
       background: linear-gradient(135deg, #0D2E1C, #0A3525);
       border: 1px solid var(--primary-dark);
@@ -83,7 +81,6 @@
     .meta-item { color: var(--muted); font-size: 12px; }
     .meta-item span { color: var(--light); font-weight: 600; }
 
-    /* Drug Card */
     .drug-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -104,7 +101,6 @@
     .drug-name { color: var(--text); font-weight: 700; font-size: 15px; }
     .drug-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
-    /* Toggle Buttons */
     .toggle-row {
       display: flex;
       gap: 8px;
@@ -135,7 +131,6 @@
       color: var(--danger);
     }
 
-    /* Price Fields */
     .price-row {
       display: flex;
       gap: 8px;
@@ -172,7 +167,6 @@
       height: 60px;
     }
 
-    /* Submit */
     .submit-bar {
       position: fixed;
       bottom: 0;
@@ -201,7 +195,6 @@
     }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* Success Screen */
     .success-screen {
       display: none;
       flex-direction: column;
@@ -255,7 +248,6 @@
       gap: 8px;
     }
 
-    /* Already responded */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -290,21 +282,18 @@
   </div>
 </div>
 
-<!-- Loading -->
 <div class="container">
   <div class="loading" id="loadingState">
     <div class="spinner"></div>
     <p style="color:var(--muted)">جاري تحميل الأصناف...</p>
   </div>
 
-  <!-- Error -->
   <div class="error-state" id="errorState" style="display:none">
     <div style="font-size:60px">❌</div>
     <div style="color:var(--danger);font-size:18px;font-weight:700" id="errorMsg">خطأ في التحميل</div>
     <div style="color:var(--muted);font-size:13px">تأكد من صحة الرابط أو تواصل مع الصيدلي</div>
   </div>
 
-  <!-- Main Content -->
   <div id="mainContent" style="display:none">
     <div class="session-info">
       <h2 id="pharmacyName">صيدلية</h2>
@@ -320,7 +309,6 @@
     <div id="itemsList"></div>
   </div>
 
-  <!-- Success -->
   <div class="success-screen" id="successScreen">
     <div class="success-icon">✅</div>
     <div class="success-title">تم إرسال ردك!</div>
@@ -337,7 +325,6 @@
   </div>
 </div>
 
-<!-- Submit Bar -->
 <div class="submit-bar" id="submitBar" style="display:none">
   <button class="submit-btn" id="submitBtn" onclick="submitResponse()">
     📤 إرسال الرد للصيدلي
@@ -356,7 +343,7 @@
   // ═══════════════════════════════════════════════
   let sessionData = null;
   let sessionItems = [];
-  let responses = {}; // {itemId: {available, price, discount, notes}}
+  let responses = {};
   let responseCode = '';
   let pharmacyPhone = '';
   let currency = '';
@@ -374,7 +361,6 @@
     }
 
     try {
-      // جلب بيانات الجلسة
       const sessionRes = await supabaseGet(`rep_sessions?session_code=eq.${code}&select=*`);
       if (!sessionRes || sessionRes.length === 0) {
         showError('هذا الرابط غير موجود أو منتهي الصلاحية');
@@ -383,15 +369,38 @@
 
       sessionData = sessionRes[0];
 
-      // تحقق إذا انتهت الصلاحية
+      // تحقق إذا انتهت الصلاحية - نعرض رسالة مع إمكانية التجديد
       if (new Date(sessionData.expires_at) < new Date()) {
-        showError('انتهت صلاحية هذا الرابط (24 ساعة)');
+        const expiredMsg = `
+          <div style="text-align:center;padding:30px">
+            <div style="font-size:50px;margin-bottom:16px">⏰</div>
+            <div style="color:var(--danger);font-size:18px;font-weight:700;margin-bottom:8px">
+              انتهت صلاحية هذا الرابط
+            </div>
+            <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
+              صلاحية الرابط ساعتان فقط من وقت الإرسال
+            </div>
+            <button onclick="requestRenewal('${code}')" style="
+              background: var(--primary);
+              color: white;
+              border: none;
+              border-radius: 12px;
+              padding: 12px 24px;
+              font-family: 'Cairo', sans-serif;
+              font-weight: 700;
+              cursor: pointer;
+              font-size: 14px;
+            ">
+              🔄 طلب تجديد من الصيدلي
+            </button>
+          </div>
+        `;
+        showErrorCustom(expiredMsg);
         return;
       }
 
       // تحقق لو تم الرد مسبقاً
       if (sessionData.status === 'responded') {
-        // عرض الكود القديم
         const codeRes = await supabaseGet(`response_codes?session_id=eq.${sessionData.id}&select=*`);
         if (codeRes && codeRes.length > 0) {
           showSuccess(codeRes[0].response_code);
@@ -399,11 +408,9 @@
         }
       }
 
-      // جلب الأصناف
       const itemsRes = await supabaseGet(`session_items?session_id=eq.${sessionData.id}&is_private=eq.0&select=*`);
       sessionItems = itemsRes || [];
 
-      // عرض البيانات
       document.getElementById('pharmacyName').textContent = sessionData.pharmacy_name || 'صيدليتي';
       document.getElementById('repName').textContent = sessionData.rep_name || 'المندوب';
       document.getElementById('itemCount').textContent = sessionItems.length;
@@ -418,6 +425,55 @@
 
     } catch (err) {
       showError('حدث خطأ في الاتصال: ' + err.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // Renewal Request
+  // ═══════════════════════════════════════════════
+  async function requestRenewal(code) {
+    showErrorCustom(`
+      <div style="text-align:center;padding:30px">
+        <div style="font-size:50px;margin-bottom:16px">📱</div>
+        <div style="color:var(--warning);font-size:16px;font-weight:700;margin-bottom:8px">
+          جاري إرسال طلب التجديد...
+        </div>
+        <div class="spinner" style="margin:20px auto"></div>
+      </div>
+    `);
+
+    try {
+      await supabasePost('renewal_requests', {
+        session_code: code,
+        rep_phone: sessionData.rep_phone || '',
+        requested_at: new Date().toISOString(),
+        status: 'pending'
+      });
+
+      showErrorCustom(`
+        <div style="text-align:center;padding:30px">
+          <div style="font-size:50px;margin-bottom:16px">✅</div>
+          <div style="color:var(--primary);font-size:16px;font-weight:700;margin-bottom:8px">
+            تم إرسال طلبك!
+          </div>
+          <div style="color:var(--muted);font-size:13px">
+            سيتم تجديد الرابط تلقائياً خلال دقائق.<br/>
+            أعد فتح الرابط بعد قليل.
+          </div>
+        </div>
+      `);
+    } catch (err) {
+      showErrorCustom(`
+        <div style="text-align:center;padding:30px">
+          <div style="font-size:50px;margin-bottom:16px">📱</div>
+          <div style="color:var(--warning);font-size:16px;font-weight:700;margin-bottom:8px">
+            تواصل مع الصيدلي
+          </div>
+          <div style="color:var(--muted);font-size:13px">
+            اطلب منه إرسال رابط جديد من التطبيق
+          </div>
+        </div>
+      `);
     }
   }
 
@@ -492,11 +548,9 @@
   // Submit
   // ═══════════════════════════════════════════════
   async function submitResponse() {
-    // تحقق إن كل الأصناف تم الرد عليها
     const unanswered = sessionItems.filter(item => responses[item.id].available === null);
     if (unanswered.length > 0) {
       alert(`يرجى تحديد حالة ${unanswered.length} صنف لم تحدده بعد`);
-      // scroll لأول صنف بدون رد
       document.getElementById(`card-${unanswered[0].id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -506,10 +560,8 @@
     btn.textContent = '⏳ جاري الإرسال...';
 
     try {
-      // توليد كود الرد
       responseCode = generateCode();
 
-      // تحديث كل صنف
       for (const item of sessionItems) {
         const r = responses[item.id];
         await supabasePatch(`session_items?id=eq.${item.id}`, {
@@ -520,13 +572,11 @@
         });
       }
 
-      // تحديث حالة الجلسة
       await supabasePatch(`rep_sessions?id=eq.${sessionData.id}`, {
         status: 'responded',
         responded_at: new Date().toISOString(),
       });
 
-      // حفظ كود الرد
       await supabasePost('response_codes', {
         response_code: responseCode,
         session_id: sessionData.id,
@@ -627,6 +677,13 @@
     hide('loadingState');
     document.getElementById('errorMsg').textContent = msg;
     document.getElementById('errorState').style.display = 'flex';
+  }
+
+  function showErrorCustom(htmlContent) {
+    hide('loadingState');
+    const errorState = document.getElementById('errorState');
+    errorState.style.display = 'flex';
+    errorState.innerHTML = htmlContent;
   }
 
   // Start
