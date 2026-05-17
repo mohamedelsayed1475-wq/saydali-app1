@@ -5,38 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>صيدلي PRO - رد المندوب</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Outfit:wght@400;600;800&display=swap');
 
     :root {
-      --primary: #00C896;
-      --primary-dark: #00A07A;
-      --danger: #EF4444;
-      --warning: #F59E0B;
-      --dark: #0D1B2A;
-      --card: #132233;
-      --border: #1E3347;
-      --text: #E8F4F8;
-      --muted: #7A9BB5;
-      --light: #B0CCD9;
+      --primary: #00e6aa;
+      --primary-dark: #00b386;
+      --primary-glow: rgba(0, 230, 170, 0.4);
+      --danger: #ff4d4d;
+      --danger-glow: rgba(255, 77, 77, 0.4);
+      --warning: #ffb84d;
+      --bg: #0b1120;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --light: #e5e7eb;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Cairo', sans-serif;
-      background: var(--dark);
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(0, 230, 170, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(0, 179, 134, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
       padding-bottom: 100px;
     }
 
+    /* Glassmorphism utility */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
     .header {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
+      background: rgba(11, 17, 32, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
       padding: 16px 20px;
       position: sticky;
       top: 0;
       z-index: 10;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
 
     .header-content {
@@ -44,14 +61,23 @@
       margin: 0 auto;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .logo { font-size: 28px; }
-    .app-name { color: var(--primary); font-size: 20px; font-weight: 800; }
-    .page-sub { color: var(--muted); font-size: 12px; }
+    .logo { 
+      font-size: 32px; 
+      filter: drop-shadow(0 0 8px var(--primary-glow));
+    }
+    .app-name { 
+      color: var(--primary); 
+      font-size: 22px; 
+      font-weight: 800;
+      font-family: 'Outfit', 'Cairo', sans-serif;
+      letter-spacing: 0.5px;
+    }
+    .page-sub { color: var(--muted); font-size: 13px; font-weight: 600; }
 
-    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
 
     .loading, .error-state {
       display: flex; flex-direction: column;
@@ -60,111 +86,185 @@
       text-align: center;
     }
     .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--border);
+      width: 48px; height: 48px;
+      border: 4px solid var(--card-border);
       border-top-color: var(--primary);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .session-info {
-      background: linear-gradient(135deg, #0D2E1C, #0A3525);
-      border: 1px solid var(--primary-dark);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(0,230,170,0.1) 0%, rgba(0,179,134,0.05) 100%);
+    }
+    .session-info::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    }
+    .session-info h2 { 
+      color: var(--primary); 
+      font-size: 20px; 
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(0,230,170,0.3);
+    }
+    .session-info p { color: var(--light); font-size: 14px; line-height: 1.5; }
+    
+    .session-meta { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+    .meta-item { 
+      background: rgba(255,255,255,0.05);
+      padding: 6px 12px;
+      border-radius: 30px;
+      color: var(--muted); 
+      font-size: 13px;
+      border: 1px solid var(--card-border);
+    }
+    .meta-item span { color: var(--text); font-weight: 700; margin-right: 4px; }
+
+    .drug-card {
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
     }
-    .session-info h2 { color: var(--primary); font-size: 16px; margin-bottom: 6px; }
-    .session-info p { color: var(--light); font-size: 13px; }
-    .session-meta { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
-    .meta-item { color: var(--muted); font-size: 12px; }
-    .meta-item span { color: var(--light); font-weight: 600; }
-
-    .drug-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 10px;
-      transition: border-color 0.2s;
+    .drug-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.15);
     }
-    .drug-card.available { border-color: rgba(0,200,150,0.4); }
-    .drug-card.unavailable { border-color: rgba(239,68,68,0.4); }
+    .drug-card.available { 
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(0,230,170,0.15);
+    }
+    .drug-card.unavailable { 
+      border-color: var(--danger);
+      box-shadow: 0 0 20px rgba(255,77,77,0.15);
+    }
 
     .drug-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
     }
-    .drug-name { color: var(--text); font-weight: 700; font-size: 15px; }
-    .drug-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .drug-name { 
+      color: var(--text); 
+      font-weight: 800; 
+      font-size: 18px; 
+      letter-spacing: 0.5px;
+    }
+    .drug-meta { 
+      color: var(--primary); 
+      font-size: 14px; 
+      font-weight: 600;
+      margin-top: 4px; 
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,230,170,0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
 
     .toggle-row {
       display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .toggle-btn {
       flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--dark);
+      padding: 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
       color: var(--muted);
       font-family: 'Cairo', sans-serif;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .toggle-btn:hover {
+      background: rgba(255,255,255,0.08);
+      transform: scale(1.02);
+    }
+    .toggle-btn:active {
+      transform: scale(0.98);
     }
     .toggle-btn.active-yes {
-      background: rgba(0,200,150,0.1);
+      background: rgba(0,230,170,0.15);
       border-color: var(--primary);
       color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
     }
     .toggle-btn.active-no {
-      background: rgba(239,68,68,0.1);
+      background: rgba(255,77,77,0.15);
       border-color: var(--danger);
       color: var(--danger);
+      box-shadow: 0 0 15px var(--danger-glow);
+    }
+
+    .details-panel {
+      animation: slideDown 0.3s ease-out forwards;
+      transform-origin: top;
+      overflow: hidden;
+      margin-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 16px;
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: scaleY(0.9); max-height: 0; }
+      to { opacity: 1; transform: scaleY(1); max-height: 300px; }
     }
 
     .price-row {
       display: flex;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .field-group { flex: 1; }
-    .field-group label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
-    .field-group input {
-      width: 100%;
-      background: var(--dark);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-family: 'Cairo', sans-serif;
-      font-size: 14px;
-      outline: none;
+    .field-group label { 
+      display: block; 
+      color: var(--light); 
+      font-size: 13px; 
+      font-weight: 600;
+      margin-bottom: 6px; 
     }
-    .field-group input:focus { border-color: var(--primary); }
-    .field-group input::placeholder { color: var(--muted); }
+    .field-group input, .notes-input {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'Outfit', 'Cairo', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .field-group input:focus, .notes-input:focus { 
+      border-color: var(--primary); 
+      box-shadow: 0 0 0 3px rgba(0,230,170,0.15);
+      background: rgba(0,0,0,0.5);
+    }
+    .field-group input::placeholder, .notes-input::placeholder { color: var(--muted); }
 
     .notes-input {
-      width: 100%;
-      background: var(--dark);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-family: 'Cairo', sans-serif;
-      font-size: 13px;
-      outline: none;
-      margin-top: 8px;
       resize: none;
-      height: 60px;
+      height: 70px;
+      font-family: 'Cairo', sans-serif;
     }
 
     .submit-bar {
@@ -172,28 +272,46 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 16px;
+      background: rgba(11, 17, 32, 0.85);
+      backdrop-filter: blur(15px);
+      border-top: 1px solid var(--card-border);
+      padding: 20px;
       z-index: 20;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
     }
     .submit-btn {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
+      color: #000;
       border: none;
-      border-radius: 14px;
-      padding: 14px;
+      border-radius: 16px;
+      padding: 16px;
       font-family: 'Cairo', sans-serif;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 800;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px var(--primary-glow);
     }
-    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px var(--primary-glow);
+    }
+    .submit-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .submit-btn:disabled { 
+      background: var(--card-border);
+      color: var(--muted);
+      box-shadow: none;
+      cursor: not-allowed; 
+    }
 
     .success-screen {
       display: none;
@@ -202,71 +320,100 @@
       justify-content: center;
       min-height: 80vh;
       text-align: center;
-      gap: 16px;
+      gap: 20px;
       padding: 24px;
+      animation: fadeIn 0.5s ease;
     }
-    .success-icon { font-size: 80px; }
-    .success-title { color: var(--primary); font-size: 24px; font-weight: 800; }
-    .success-sub { color: var(--light); font-size: 14px; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .success-icon { 
+      font-size: 90px; 
+      filter: drop-shadow(0 0 20px var(--primary-glow));
+      animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .success-title { 
+      color: var(--primary); 
+      font-size: 28px; 
+      font-weight: 800; 
+      text-shadow: 0 0 10px var(--primary-glow);
+    }
+    .success-sub { color: var(--light); font-size: 16px; }
+    
     .code-display {
-      background: var(--card);
-      border: 2px solid var(--primary);
-      border-radius: 16px;
-      padding: 20px 30px;
+      background: rgba(0,0,0,0.4);
+      border: 2px dashed var(--primary);
+      border-radius: 20px;
+      padding: 24px 40px;
+      margin: 10px 0;
+      position: relative;
     }
-    .code-label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .code-label { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
     .code-value {
       color: var(--primary);
-      font-size: 32px;
+      font-size: 40px;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
-      letter-spacing: 6px;
+      letter-spacing: 8px;
+      text-shadow: 0 0 15px var(--primary-glow);
     }
     .copy-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-family: 'Cairo', sans-serif;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    .whatsapp-btn {
-      background: #25D366;
-      color: white;
-      border: none;
-      border-radius: 14px;
-      padding: 14px 24px;
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 24px;
       font-family: 'Cairo', sans-serif;
       font-weight: 700;
       cursor: pointer;
       font-size: 15px;
+      margin-top: 16px;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .whatsapp-btn {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 16px 32px;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
     }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(0,200,150,0.1);
-      border: 1px solid rgba(0,200,150,0.3);
-      border-radius: 20px;
-      padding: 4px 12px;
-      color: var(--primary);
-      font-size: 12px;
-      font-weight: 700;
+    .whatsapp-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4);
     }
 
     .section-title {
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      margin: 16px 0 8px;
+      font-size: 14px;
+      font-weight: 800;
+      margin: 24px 0 12px;
       letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 4px; height: 16px;
+      background: var(--primary);
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -285,49 +432,50 @@
 <div class="container">
   <div class="loading" id="loadingState">
     <div class="spinner"></div>
-    <p style="color:var(--muted)">جاري تحميل الأصناف...</p>
+    <p style="color:var(--muted); font-weight: 600; margin-top: 10px;">جاري تأمين وتنزيل الأصناف...</p>
   </div>
 
   <div class="error-state" id="errorState" style="display:none">
-    <div style="font-size:60px">❌</div>
-    <div style="color:var(--danger);font-size:18px;font-weight:700" id="errorMsg">خطأ في التحميل</div>
-    <div style="color:var(--muted);font-size:13px">تأكد من صحة الرابط أو تواصل مع الصيدلي</div>
+    <div style="font-size:70px; filter: drop-shadow(0 0 20px var(--danger-glow));">❌</div>
+    <div style="color:var(--danger);font-size:22px;font-weight:800" id="errorMsg">خطأ في التحميل</div>
+    <div style="color:var(--muted);font-size:15px">تأكد من صحة الرابط أو تواصل مع الصيدلي</div>
   </div>
 
   <div id="mainContent" style="display:none">
-    <div class="session-info">
+    <div class="session-info glass">
       <h2 id="pharmacyName">صيدلية</h2>
-      <p>يرجى مراجعة الأصناف الناقصة وتحديد المتاح منها مع السعر والخصم</p>
+      <p>يرجى مراجعة الأصناف وتحديد <b>المتاح منها</b> وتأكيد الكمية والأسعار لضمان دقة الطلبية.</p>
+      
       <div class="session-meta">
-        <div class="meta-item">المندوب: <span id="repName">-</span></div>
-        <div class="meta-item">عدد الأصناف: <span id="itemCount">0</span></div>
-        <div class="meta-item">صالح حتى: <span id="expiresAt">-</span></div>
+        <div class="meta-item">👤 المندوب: <span id="repName">-</span></div>
+        <div class="meta-item">📦 عدد الأصناف: <span id="itemCount">0</span></div>
+        <div class="meta-item">⏳ صالح حتى: <span id="expiresAt">-</span></div>
       </div>
     </div>
 
-    <div class="section-title">📋 الأصناف المطلوبة</div>
+    <div class="section-title">الأصناف المطلوبة من الصيدلية</div>
     <div id="itemsList"></div>
   </div>
 
   <div class="success-screen" id="successScreen">
     <div class="success-icon">✅</div>
-    <div class="success-title">تم إرسال ردك!</div>
-    <div class="success-sub">أرسل الكود التالي للصيدلي</div>
+    <div class="success-title">تم تسجيل ردك بنجاح!</div>
+    <div class="success-sub">أرسل الكود التالي للصيدلي ليتمكن من معالجة الطلبية</div>
     <div class="code-display">
-      <div class="code-label">كود الرد</div>
+      <div class="code-label">كود الرد الآمن</div>
       <div class="code-value" id="responseCodeDisplay">--------</div>
       <button class="copy-btn" onclick="copyCode()">📋 نسخ الكود</button>
     </div>
     <button class="whatsapp-btn" onclick="sendWhatsApp()">
-      <span>📱</span> إرسال عبر واتساب
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+      إرسال الكود عبر واتساب
     </button>
-    <div style="color:var(--muted);font-size:12px">أو أرسل الكود يدوياً للصيدلي</div>
   </div>
 </div>
 
 <div class="submit-bar" id="submitBar" style="display:none">
   <button class="submit-btn" id="submitBtn" onclick="submitResponse()">
-    📤 إرسال الرد للصيدلي
+    <span>🚀</span> إرسال الرد للصيدلية
   </button>
 </div>
 
@@ -369,29 +517,30 @@
 
       sessionData = sessionRes[0];
 
-      // تحقق إذا انتهت الصلاحية - نعرض رسالة مع إمكانية التجديد
       if (new Date(sessionData.expires_at) < new Date()) {
         const expiredMsg = `
           <div style="text-align:center;padding:30px">
-            <div style="font-size:50px;margin-bottom:16px">⏰</div>
-            <div style="color:var(--danger);font-size:18px;font-weight:700;margin-bottom:8px">
+            <div style="font-size:60px;margin-bottom:20px; filter: drop-shadow(0 0 15px rgba(255,184,77,0.5))">⏰</div>
+            <div style="color:var(--warning);font-size:20px;font-weight:800;margin-bottom:10px">
               انتهت صلاحية هذا الرابط
             </div>
-            <div style="color:var(--muted);font-size:13px;margin-bottom:20px">
-              صلاحية الرابط ساعتان فقط من وقت الإرسال
+            <div style="color:var(--muted);font-size:14px;margin-bottom:24px">
+              صلاحية الرابط ساعتان فقط من وقت الإرسال للحفاظ على دقة النواقص.
             </div>
             <button onclick="requestRenewal('${code}')" style="
-              background: var(--primary);
-              color: white;
+              background: linear-gradient(135deg, var(--warning), #f59e0b);
+              color: #000;
               border: none;
               border-radius: 12px;
-              padding: 12px 24px;
+              padding: 14px 28px;
               font-family: 'Cairo', sans-serif;
-              font-weight: 700;
+              font-weight: 800;
               cursor: pointer;
-              font-size: 14px;
+              font-size: 16px;
+              box-shadow: 0 4px 15px rgba(255,184,77,0.3);
+              transition: all 0.3s;
             ">
-              🔄 طلب تجديد من الصيدلي
+              🔄 طلب تجديد من الصيدلية
             </button>
           </div>
         `;
@@ -399,7 +548,6 @@
         return;
       }
 
-      // تحقق لو تم الرد مسبقاً
       if (sessionData.status === 'responded') {
         const codeRes = await supabaseGet(`response_codes?session_id=eq.${sessionData.id}&select=*`);
         if (codeRes && codeRes.length > 0) {
@@ -434,11 +582,11 @@
   async function requestRenewal(code) {
     showErrorCustom(`
       <div style="text-align:center;padding:30px">
-        <div style="font-size:50px;margin-bottom:16px">📱</div>
-        <div style="color:var(--warning);font-size:16px;font-weight:700;margin-bottom:8px">
+        <div style="font-size:60px;margin-bottom:20px">📱</div>
+        <div style="color:var(--warning);font-size:20px;font-weight:800;margin-bottom:12px">
           جاري إرسال طلب التجديد...
         </div>
-        <div class="spinner" style="margin:20px auto"></div>
+        <div class="spinner" style="margin:24px auto"></div>
       </div>
     `);
 
@@ -452,24 +600,24 @@
 
       showErrorCustom(`
         <div style="text-align:center;padding:30px">
-          <div style="font-size:50px;margin-bottom:16px">✅</div>
-          <div style="color:var(--primary);font-size:16px;font-weight:700;margin-bottom:8px">
+          <div style="font-size:60px;margin-bottom:20px;filter:drop-shadow(0 0 15px var(--primary-glow))">✅</div>
+          <div style="color:var(--primary);font-size:20px;font-weight:800;margin-bottom:12px">
             تم إرسال طلبك!
           </div>
-          <div style="color:var(--muted);font-size:13px">
-            سيتم تجديد الرابط تلقائياً خلال دقائق.<br/>
-            أعد فتح الرابط بعد قليل.
+          <div style="color:var(--light);font-size:15px;line-height:1.6">
+            سيتم إشعار الصيدلي بتجديد الرابط.<br/>
+            الرجاء إعادة المحاولة بعد قليل.
           </div>
         </div>
       `);
     } catch (err) {
       showErrorCustom(`
         <div style="text-align:center;padding:30px">
-          <div style="font-size:50px;margin-bottom:16px">📱</div>
-          <div style="color:var(--warning);font-size:16px;font-weight:700;margin-bottom:8px">
+          <div style="font-size:60px;margin-bottom:20px">📱</div>
+          <div style="color:var(--warning);font-size:20px;font-weight:800;margin-bottom:12px">
             تواصل مع الصيدلي
           </div>
-          <div style="color:var(--muted);font-size:13px">
+          <div style="color:var(--muted);font-size:15px">
             اطلب منه إرسال رابط جديد من التطبيق
           </div>
         </div>
@@ -485,45 +633,60 @@
     list.innerHTML = '';
 
     if (sessionItems.length === 0) {
-      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">🎉 لا توجد أصناف</div>';
+      list.innerHTML = '<div class="glass" style="text-align:center;padding:40px;border-radius:16px;color:var(--muted);font-size:16px;font-weight:700">🎉 لا توجد أصناف مطلوبة حالياً</div>';
       return;
     }
 
     sessionItems.forEach(item => {
-      responses[item.id] = { available: null, price: '', discount: '0', notes: '' };
+      responses[item.id] = { available: null, available_qty: item.quantity, price: '', discount: '0', notes: '' };
 
       const card = document.createElement('div');
-      card.className = 'drug-card';
+      card.className = 'drug-card glass';
       card.id = `card-${item.id}`;
+      
+      let companyName = (item.company && item.company !== 'غير محدد' && item.company !== 'null' && item.company !== '') ? `${item.company} · ` : '';
+      let metaText = `🛒 المطلوب: ${item.quantity} علبة`;
+      
+      if (companyName) {
+        metaText = `🏢 ${companyName} | ${metaText}`;
+      }
+
       card.innerHTML = `
         <div class="drug-header">
           <div>
             <div class="drug-name">${item.drug_name}</div>
-            <div class="drug-meta">${item.company} · ${item.quantity} علبة</div>
+            <div class="drug-meta">${metaText}</div>
           </div>
         </div>
         <div class="toggle-row">
           <button class="toggle-btn" id="yes-${item.id}" onclick="setAvailable('${item.id}', true)">
-            ✅ متاح
+            ✅ متوفر لدي
           </button>
           <button class="toggle-btn" id="no-${item.id}" onclick="setAvailable('${item.id}', false)">
-            ❌ غير متاح
+            ❌ غير متوفر
           </button>
         </div>
-        <div id="price-fields-${item.id}" style="display:none">
+        <div id="price-fields-${item.id}" class="details-panel" style="display:none">
           <div class="price-row">
             <div class="field-group">
-              <label>السعر (${currency})</label>
+              <label>الكمية المتاحة عندك</label>
+              <input type="number" min="1" id="qty-${item.id}"
+                oninput="responses['${item.id}'].available_qty = this.value" value="${item.quantity}" />
+            </div>
+          </div>
+          <div class="price-row">
+            <div class="field-group">
+              <label>سعر العلبة (${currency})</label>
               <input type="number" placeholder="0.00" id="price-${item.id}"
                 oninput="responses['${item.id}'].price = this.value" />
             </div>
             <div class="field-group">
-              <label>الخصم %</label>
+              <label>الخصم المسموح %</label>
               <input type="number" placeholder="0" min="0" max="100" id="disc-${item.id}"
                 oninput="responses['${item.id}'].discount = this.value" value="0" />
             </div>
           </div>
-          <textarea class="notes-input" placeholder="ملاحظات (اختياري)..."
+          <textarea class="notes-input" placeholder="هل لديك ملاحظات حول هذا الصنف؟ (اختياري)..."
             oninput="responses['${item.id}'].notes = this.value"></textarea>
         </div>
       `;
@@ -538,10 +701,19 @@
     const noBtn = document.getElementById(`no-${itemId}`);
     const priceFields = document.getElementById(`price-fields-${itemId}`);
 
-    card.className = 'drug-card ' + (available ? 'available' : 'unavailable');
+    card.className = 'drug-card glass ' + (available ? 'available' : 'unavailable');
     yesBtn.className = 'toggle-btn ' + (available ? 'active-yes' : '');
     noBtn.className = 'toggle-btn ' + (!available ? 'active-no' : '');
-    priceFields.style.display = available ? 'block' : 'none';
+    
+    if (available) {
+      priceFields.style.display = 'block';
+      // Focus on price input after a short delay for animation
+      setTimeout(() => {
+        document.getElementById(`price-${itemId}`).focus();
+      }, 300);
+    } else {
+      priceFields.style.display = 'none';
+    }
   }
 
   // ═══════════════════════════════════════════════
@@ -557,15 +729,22 @@
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ جاري الإرسال...';
+    btn.innerHTML = '<div class="spinner" style="width:24px;height:24px;border-width:3px;border-top-color:#000"></div> جاري الإرسال...';
 
     try {
       responseCode = generateCode();
 
       for (const item of sessionItems) {
         const r = responses[item.id];
+        let finalQty = item.quantity;
+        if (r.available) {
+          finalQty = parseInt(r.available_qty);
+          if (isNaN(finalQty) || finalQty <= 0) finalQty = item.quantity;
+        }
+
         await supabasePatch(`session_items?id=eq.${item.id}`, {
           is_available: r.available ? 1 : 0,
+          quantity: finalQty,
           price: r.available ? parseFloat(r.price) || 0 : null,
           discount: r.available ? parseFloat(r.discount) || 0 : 0,
           rep_notes: r.notes || null,
@@ -586,8 +765,8 @@
 
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = '📤 إرسال الرد للصيدلي';
-      alert('حدث خطأ: ' + err.message);
+      btn.innerHTML = '<span>🚀</span> إرسال الرد للصيدلية';
+      alert('حدث خطأ أثناء الإرسال: ' + err.message);
     }
   }
 
@@ -601,16 +780,17 @@
     hide('loadingState');
     document.getElementById('responseCodeDisplay').textContent = code;
     document.getElementById('successScreen').style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function copyCode() {
     navigator.clipboard.writeText(responseCode).then(() => {
-      alert('تم نسخ الكود: ' + responseCode);
+      alert('تم نسخ الكود بنجاح: ' + responseCode);
     });
   }
 
   function sendWhatsApp() {
-    const msg = encodeURIComponent(`كود الرد على نواقص صيدلية ${sessionData?.pharmacy_name || ''}: *${responseCode}*`);
+    const msg = encodeURIComponent(`كود الرد على نواقص صيدلية ${sessionData?.pharmacy_name || ''} هو: *${responseCode}*`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
 
