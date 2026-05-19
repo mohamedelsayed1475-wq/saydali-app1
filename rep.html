@@ -676,8 +676,8 @@
           <div class="price-row">
             <div class="field-group">
               <label>الكمية المتاحة عندك</label>
-              <input type="number" min="1" id="qty-${item.id}"
-                oninput="responses['${item.id}'].available_qty = this.value" value="${item.quantity}" />
+              <input type="number" min="1" max="${item.quantity}" id="qty-${item.id}"
+                oninput="if(parseInt(this.value) > ${item.quantity}) this.value = ${item.quantity}; responses['${item.id}'].available_qty = this.value" value="${item.quantity}" />
             </div>
           </div>
           <div class="price-row">
