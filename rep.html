@@ -14,6 +14,9 @@
       --danger: #ff4d4d;
       --danger-glow: rgba(255, 77, 77, 0.4);
       --warning: #ffb84d;
+      --warning-glow: rgba(255, 184, 77, 0.3);
+      --info: #60a5fa;
+      --info-glow: rgba(96, 165, 250, 0.3);
       --bg: #0b1120;
       --card-bg: rgba(17, 24, 39, 0.7);
       --card-border: rgba(255, 255, 255, 0.08);
@@ -232,7 +235,7 @@
     
     @keyframes slideDown {
       from { opacity: 0; transform: scaleY(0.9); max-height: 0; }
-      to { opacity: 1; transform: scaleY(1); max-height: 300px; }
+      to { opacity: 1; transform: scaleY(1); max-height: 600px; }
     }
 
     .price-row {
@@ -248,7 +251,7 @@
       font-weight: 600;
       margin-bottom: 6px; 
     }
-    .field-group input, .notes-input {
+    .field-group input, .notes-input, .alternative-input {
       width: 100%;
       background: rgba(0,0,0,0.3);
       border: 1px solid var(--card-border);
@@ -260,18 +263,85 @@
       outline: none;
       transition: all 0.2s;
     }
-    .field-group input:focus, .notes-input:focus { 
+    .field-group input:focus, .notes-input:focus, .alternative-input:focus { 
       border-color: var(--primary); 
       box-shadow: 0 0 0 3px rgba(0,230,170,0.15);
       background: rgba(0,0,0,0.5);
     }
-    .field-group input::placeholder, .notes-input::placeholder { color: var(--muted); }
+    .field-group input::placeholder, .notes-input::placeholder, .alternative-input::placeholder { 
+      color: var(--muted); 
+    }
 
     .notes-input {
       resize: none;
       height: 70px;
       font-family: 'Cairo', sans-serif;
     }
+
+    /* ─── Alternative Suggestion Box ──────────────────────────── */
+    .unavailable-panel {
+      animation: slideDown 0.3s ease-out forwards;
+      transform-origin: top;
+      margin-top: 16px;
+      border-top: 1px solid rgba(255,77,77,0.15);
+      padding-top: 16px;
+    }
+
+    .alternative-box {
+      background: rgba(96, 165, 250, 0.05);
+      border: 1px dashed rgba(96, 165, 250, 0.3);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 0;
+    }
+
+    .alternative-box-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .alternative-icon {
+      font-size: 20px;
+      filter: drop-shadow(0 0 6px var(--info-glow));
+    }
+
+    .alternative-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--info);
+      flex: 1;
+    }
+
+    .optional-badge {
+      background: rgba(96, 165, 250, 0.15);
+      color: var(--info);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .alternative-input {
+      border-color: rgba(96, 165, 250, 0.25);
+      font-family: 'Cairo', sans-serif;
+    }
+    .alternative-input:focus {
+      border-color: var(--info);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+    }
+
+    .alternative-hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    /* ─────────────────────────────────────────────────────────── */
 
     .submit-bar {
       position: fixed;
@@ -644,7 +714,15 @@
     }
 
     sessionItems.forEach(item => {
-      responses[item.id] = { available: null, available_qty: item.quantity, price: '', discount: '0', notes: '' };
+      // responses state: available, available_qty, price, discount, notes, rep_alternative
+      responses[item.id] = {
+        available: null,
+        available_qty: item.quantity,
+        price: '',
+        discount: '0',
+        notes: '',
+        rep_alternative: ''   // ← حقل البديل الجديد
+      };
 
       const card = document.createElement('div');
       card.className = 'drug-card glass';
@@ -672,6 +750,8 @@
             ❌ غير متوفر
           </button>
         </div>
+
+        <!-- لوحة الأسعار (يظهر عند الضغط على "متوفر") -->
         <div id="price-fields-${item.id}" class="details-panel" style="display:none">
           <div class="price-row">
             <div class="field-group">
@@ -695,6 +775,27 @@
           <textarea class="notes-input" placeholder="هل لديك ملاحظات حول هذا الصنف؟ (اختياري)..."
             oninput="responses['${item.id}'].notes = this.value"></textarea>
         </div>
+
+        <!-- لوحة البديل (يظهر عند الضغط على "غير متوفر") -->
+        <div id="unavail-fields-${item.id}" class="unavailable-panel" style="display:none">
+          <div class="alternative-box">
+            <div class="alternative-box-header">
+              <span class="alternative-icon">💡</span>
+              <span class="alternative-label">اذكر بديلاً لاستشارة الدكتور</span>
+              <span class="optional-badge">اختياري</span>
+            </div>
+            <input
+              type="text"
+              class="alternative-input"
+              id="alt-${item.id}"
+              placeholder="مثال: Panadol Extra أو أي بديل تعرفه..."
+              oninput="responses['${item.id}'].rep_alternative = this.value"
+            />
+            <div class="alternative-hint">
+              💬 هذه المعلومة تساعد الصيدلي في إيجاد بديل مناسب لمريضه
+            </div>
+          </div>
+        </div>
       `;
       list.appendChild(card);
     });
@@ -706,6 +807,7 @@
     const yesBtn = document.getElementById(`yes-${itemId}`);
     const noBtn = document.getElementById(`no-${itemId}`);
     const priceFields = document.getElementById(`price-fields-${itemId}`);
+    const unavailFields = document.getElementById(`unavail-fields-${itemId}`);
 
     card.className = 'drug-card glass ' + (available ? 'available' : 'unavailable');
     yesBtn.className = 'toggle-btn ' + (available ? 'active-yes' : '');
@@ -713,12 +815,18 @@
     
     if (available) {
       priceFields.style.display = 'block';
-      // Focus on price input after a short delay for animation
+      unavailFields.style.display = 'none';
+      // مسح أي بديل مدخل سابقاً
+      responses[itemId].rep_alternative = '';
+      const altInput = document.getElementById(`alt-${itemId}`);
+      if (altInput) altInput.value = '';
+      // Focus على حقل السعر
       setTimeout(() => {
         document.getElementById(`price-${itemId}`).focus();
       }, 300);
     } else {
       priceFields.style.display = 'none';
+      unavailFields.style.display = 'block';
     }
   }
 
@@ -748,13 +856,17 @@
           if (isNaN(finalQty) || finalQty <= 0) finalQty = item.quantity;
         }
 
-        await supabasePatch(`session_items?id=eq.${item.id}`, {
+        // بناء payload ← يضم rep_alternative لو المندوب كتب بديلاً
+        const payload = {
           is_available: r.available ? 1 : 0,
           quantity: finalQty,
           price: r.available ? parseFloat(r.price) || 0 : null,
           discount: r.available ? parseFloat(r.discount) || 0 : 0,
           rep_notes: r.notes || null,
-        });
+          rep_alternative: (r.rep_alternative && r.rep_alternative.trim()) ? r.rep_alternative.trim() : null,
+        };
+
+        await supabasePatch(`session_items?id=eq.${item.id}`, payload);
       }
 
       await supabasePatch(`rep_sessions?id=eq.${sessionData.id}`, {
