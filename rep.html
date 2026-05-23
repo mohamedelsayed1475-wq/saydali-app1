@@ -557,22 +557,36 @@
 
 <script>
   // ═══════════════════════════════════════════════
-  // CONFIG - بيانات Supabase
+  // CONFIG - قراءة بيانات Supabase من الرابط
   // ═══════════════════════════════════════════════
-  let SUPABASE_URL = 'https://kmrszdvsdqfaaksqhnqf.supabase.co';
-  let SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttcnN6ZHZzZHFmYWFrc3FobnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTYwNTIsImV4cCI6MjA5MzA3MjA1Mn0.ac8p574OhOG9OPuHzCDOxeHNdEiUkFEtFG_l535Pl3A';
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const encodedUrl = params.get('u');
+    const encodedKey = params.get('k');
 
-  // قراءة وتشفير بيانات الاتصال ديناميكياً لتأمين المفاتيح في الاستخدام التجاري
-  const urlParams = new URLSearchParams(window.location.search);
-  const uParam = urlParams.get('u');
-  const kParam = urlParams.get('k');
-  if (uParam && kParam) {
-    try {
-      SUPABASE_URL = decodeURIComponent(escape(atob(uParam.replace(/_/g, '/').replace(/-/g, '+'))));
-      SUPABASE_KEY = decodeURIComponent(escape(atob(kParam.replace(/_/g, '/').replace(/-/g, '+'))));
-    } catch (e) {
-      console.error('Failed to decode dynamic Supabase credentials:', e);
+    if (encodedUrl && encodedKey) {
+      try {
+        window.SUPABASE_URL = atob(encodedUrl);
+        window.SUPABASE_KEY = atob(encodedKey);
+      } catch (e) {
+        window.SUPABASE_KEY = '';
+        window.SUPABASE_URL = '';
+        console.error('خطأ في فك تشفير بيانات Supabase:', e);
+      }
+    } else {
+      window.SUPABASE_URL = '';
+      window.SUPABASE_KEY = '';
+      console.error('لم يتم العثور على بيانات Supabase في الرابط');
     }
+  })();
+
+  // التحقق من وجود بيانات Supabase
+  function checkSupabaseConfig() {
+    if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
+      showError('خطأ في الاتصال: بيانات Supabase غير موجودة');
+      return false;
+    }
+    return true;
   }
 
   // ═══════════════════════════════════════════════
@@ -589,6 +603,8 @@
   // Init
   // ═══════════════════════════════════════════════
   async function init() {
+    if (!checkSupabaseConfig()) return;
+
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
 
@@ -929,10 +945,10 @@
   // Supabase Helpers
   // ═══════════════════════════════════════════════
   async function supabaseGet(path) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${path}`, {
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': window.SUPABASE_KEY,
+        'Authorization': `Bearer ${window.SUPABASE_KEY}`,
         'Content-Type': 'application/json',
       }
     });
@@ -941,11 +957,11 @@
   }
 
   async function supabasePost(table, data) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': window.SUPABASE_KEY,
+        'Authorization': `Bearer ${window.SUPABASE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal',
       },
@@ -955,11 +971,11 @@
   }
 
   async function supabasePatch(path, data) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/${path}`, {
       method: 'PATCH',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': window.SUPABASE_KEY,
+        'Authorization': `Bearer ${window.SUPABASE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal',
       },
