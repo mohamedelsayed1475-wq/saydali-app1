@@ -497,7 +497,6 @@
 
 <div class="header">
   <div class="header-content">
-    <div class="logo">💊</div>
     <div>
       <div class="app-name">صيدلي PRO</div>
       <div class="page-sub">بوابة رد المندوب</div>
@@ -564,10 +563,6 @@
     const encodedUrl = params.get('u');
     const encodedKey = params.get('k');
 
-    // القيم الافتراضية كـ Fallback لحماية الرابط وتسهيل استخدامه بدون تمرير مفاتيح
-    const DEFAULT_URL = 'https://kmrszdvsdqfaaksqhnqf.supabase.co';
-    const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttcnN6ZHZzZHFmYWFrc3FobnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTYwNTIsImV4cCI6MjA5MzA3MjA1Mn0.ac8p574OhOG9OPuHzCDOxeHNdEiUkFEtFG_l535Pl3A';
-
     if (encodedUrl && encodedKey) {
       try {
         let url = atob(encodedUrl);
@@ -575,21 +570,15 @@
         window.SUPABASE_URL = url;
         window.SUPABASE_KEY = atob(encodedKey);
       } catch (e) {
-        window.SUPABASE_URL = DEFAULT_URL;
-        window.SUPABASE_KEY = DEFAULT_KEY;
-        console.error('خطأ في فك تشفير بيانات Supabase، تم استخدام القيم الافتراضية:', e);
+        console.error('خطأ في فك تشفير بيانات Supabase:', e);
       }
-    } else {
-      window.SUPABASE_URL = DEFAULT_URL;
-      window.SUPABASE_KEY = DEFAULT_KEY;
-      console.warn('لم يتم العثور على بيانات Supabase في الرابط، تم استخدام القيم الافتراضية');
     }
   })();
 
   // التحقق من وجود بيانات Supabase
   function checkSupabaseConfig() {
     if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
-      showError('خطأ في الاتصال: بيانات Supabase غير موجودة');
+      showError('رابط غير صحيح أو ناقص: بيانات الاتصال بقاعدة البيانات غير متوفرة.');
       return false;
     }
     return true;
@@ -763,7 +752,10 @@
       card.className = 'drug-card glass';
       card.id = `card-${item.id}`;
       
-      let companyName = (item.company && item.company !== 'غير محدد' && item.company !== 'null' && item.company !== '') ? `${item.company} · ` : '';
+      const cleanDrugName = sanitize(item.drug_name);
+      const cleanCompany = sanitize(item.company);
+      
+      let companyName = (cleanCompany && cleanCompany !== 'غير محدد' && cleanCompany !== 'null' && cleanCompany !== '') ? `${cleanCompany} · ` : '';
       let metaText = `🛒 المطلوب: ${item.quantity} علبة`;
       
       if (companyName) {
@@ -773,7 +765,7 @@
       card.innerHTML = `
         <div class="drug-header">
           <div>
-            <div class="drug-name">${item.drug_name}</div>
+            <div class="drug-name">${cleanDrugName}</div>
             <div class="drug-meta">${metaText}</div>
           </div>
         </div>
@@ -993,6 +985,17 @@
   // ═══════════════════════════════════════════════
   // Utils
   // ═══════════════════════════════════════════════
+  function sanitize(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+
   function generateCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
